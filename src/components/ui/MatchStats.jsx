@@ -1,35 +1,47 @@
 import { computeMatchStats } from '../../utils/statsbomb'
 
-function StatBar({ label, home, away, format = 'number', color = 'cyan' }) {
+function StatBar({ label, home, away, format = 'number' }) {
   const homeVal = parseFloat(home)
   const awayVal = parseFloat(away)
   const total = homeVal + awayVal || 1
-
   const homeWidth = (homeVal / total) * 100
   const awayWidth = (awayVal / total) * 100
-
-  const display = format === 'percent'
-    ? [`${home}%`, `${away}%`]
-    : [home, away]
+  const display = format === 'percent' ? [`${home}%`, `${away}%`] : [home, away]
+  const homeLeads = homeVal > awayVal
+  const awayLeads = awayVal > homeVal
 
   return (
-    <div className="py-2.5">
-      <div className="flex items-center justify-between mb-1.5">
-        <span className="text-sm font-mono font-semibold text-white w-12 text-left">{display[0]}</span>
-        <span className="text-xs text-slate-400 uppercase tracking-wider">{label}</span>
-        <span className="text-sm font-mono font-semibold text-white w-12 text-right">{display[1]}</span>
+    <div className="py-3 group">
+      <div className="flex items-center justify-between mb-2">
+        <span className={`text-[13px] font-mono font-semibold tabular-nums transition-colors ${homeLeads ? 'text-cyan-300' : 'text-slate-300'}`}>
+          {display[0]}
+        </span>
+        <span className="text-[11px] text-slate-500 uppercase tracking-[0.1em] font-medium">{label}</span>
+        <span className={`text-[13px] font-mono font-semibold tabular-nums transition-colors ${awayLeads ? 'text-rose-300' : 'text-slate-300'}`}>
+          {display[1]}
+        </span>
       </div>
-      <div className="flex gap-1 h-1.5">
-        <div className="flex-1 bg-slate-800 rounded-full overflow-hidden flex justify-end">
+      <div className="flex gap-1.5 h-[5px]">
+        <div className="flex-1 rounded-full bg-white/[0.04] overflow-hidden flex justify-end">
           <div
-            className="h-full rounded-full bg-cyan-400 transition-all duration-700"
-            style={{ width: `${homeWidth}%` }}
+            className="h-full rounded-full stat-bar-fill transition-all duration-1000 ease-out"
+            style={{
+              width: `${homeWidth}%`,
+              background: homeLeads
+                ? 'linear-gradient(90deg, rgba(34,211,238,0.3), rgba(34,211,238,0.7))'
+                : 'linear-gradient(90deg, rgba(148,163,184,0.15), rgba(148,163,184,0.3))'
+            }}
           />
         </div>
-        <div className="flex-1 bg-slate-800 rounded-full overflow-hidden">
+        <div className="flex-1 rounded-full bg-white/[0.04] overflow-hidden">
           <div
-            className="h-full rounded-full bg-rose-400 transition-all duration-700"
-            style={{ width: `${awayWidth}%` }}
+            className="h-full rounded-full stat-bar-fill transition-all duration-1000 ease-out"
+            style={{
+              width: `${awayWidth}%`,
+              background: awayLeads
+                ? 'linear-gradient(90deg, rgba(251,113,133,0.7), rgba(251,113,133,0.3))'
+                : 'linear-gradient(90deg, rgba(148,163,184,0.3), rgba(148,163,184,0.15))'
+            }}
           />
         </div>
       </div>
@@ -39,21 +51,32 @@ function StatBar({ label, home, away, format = 'number', color = 'cyan' }) {
 
 export default function MatchStatsPanel({ data }) {
   if (!data) return null
-
   const stats = computeMatchStats(data)
 
   return (
-    <div className="bg-slate-900 rounded-xl p-6 border border-slate-800 animate-fade-in">
-      <h3 className="text-lg font-semibold text-white mb-4">Match Statistics</h3>
+    <div className="glass rounded-2xl p-7 h-full">
+      <div className="flex items-center justify-between mb-5">
+        <h3 className="text-[15px] font-semibold text-white tracking-tight">Match Statistics</h3>
+        <div className="flex items-center gap-4 text-[11px]">
+          <div className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-cyan-400" />
+            <span className="text-slate-500">{data.teams.home.split(' ').pop()}</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-rose-400" />
+            <span className="text-slate-500">{data.teams.away.split(' ').pop()}</span>
+          </div>
+        </div>
+      </div>
 
-      <div className="space-y-1">
+      <div className="divide-y divide-white/[0.03]">
         <StatBar label="Possession" home={stats.possession.home} away={stats.possession.away} format="percent" />
         <StatBar label="xG" home={stats.xg.home} away={stats.xg.away} />
         <StatBar label="Shots" home={stats.shots.home} away={stats.shots.away} />
         <StatBar label="On Target" home={stats.shotsOnTarget.home} away={stats.shotsOnTarget.away} />
         <StatBar label="Passes" home={stats.passes.home} away={stats.passes.away} />
         <StatBar label="Pass Accuracy" home={stats.passAccuracy.home} away={stats.passAccuracy.away} format="percent" />
-        <StatBar label="Progressive Passes" home={stats.progressivePasses.home} away={stats.progressivePasses.away} />
+        <StatBar label="Progressive" home={stats.progressivePasses.home} away={stats.progressivePasses.away} />
       </div>
     </div>
   )

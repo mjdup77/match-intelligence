@@ -1,18 +1,20 @@
 import { useState } from 'react'
 import Pitch from '../pitch/Pitch'
+import Section from '../ui/Section'
+import Toggle from '../ui/Toggle'
 
-const OUTCOME_COLORS = {
-  Goal: '#34d399',
-  Saved: '#fbbf24',
-  'Saved to Post': '#fbbf24',
-  Blocked: '#fb923c',
-  Off_T: '#fb7185',
-  Wayward: '#fb7185',
-  Post: '#a78bfa',
+const OUTCOMES = {
+  Goal: { color: '#34d399', glow: 'rgba(52,211,153,0.4)' },
+  Saved: { color: '#fbbf24', glow: 'rgba(251,191,36,0.3)' },
+  'Saved to Post': { color: '#fbbf24', glow: 'rgba(251,191,36,0.3)' },
+  Blocked: { color: '#fb923c', glow: 'rgba(251,146,60,0.3)' },
+  Off_T: { color: '#fb7185', glow: 'rgba(251,113,133,0.3)' },
+  Wayward: { color: '#fb7185', glow: 'rgba(251,113,133,0.3)' },
+  Post: { color: '#a78bfa', glow: 'rgba(167,139,250,0.3)' },
 }
 
-function getColor(outcome) {
-  return OUTCOME_COLORS[outcome] || '#94a3b8'
+function getOutcome(name) {
+  return OUTCOMES[name] || { color: '#64748b', glow: 'rgba(100,116,139,0.3)' }
 }
 
 export default function ShotMap({ shots, homeTeam, awayTeam }) {
@@ -23,48 +25,35 @@ export default function ShotMap({ shots, homeTeam, awayTeam }) {
     ? shots
     : shots.filter(s => s.team?.name === (activeTeam === 'home' ? homeTeam : awayTeam))
 
-  const homeXG = shots.filter(s => s.team?.name === homeTeam).reduce((s, sh) => s + (sh.shot?.statsbomb_xg || 0), 0)
-  const awayXG = shots.filter(s => s.team?.name === awayTeam).reduce((s, sh) => s + (sh.shot?.statsbomb_xg || 0), 0)
+  const xg = (team) => shots.filter(s => s.team?.name === team).reduce((s, sh) => s + (sh.shot?.statsbomb_xg || 0), 0)
 
   return (
-    <div className="bg-slate-900 rounded-xl p-6 border border-slate-800">
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h3 className="text-lg font-semibold text-white">Shot Map</h3>
-          <p className="text-sm text-slate-400 mt-1">Size = xG value · Colour = outcome</p>
-        </div>
-        <div className="flex gap-1 bg-slate-800 rounded-lg p-1">
-          {[
+    <Section
+      title="Shot Map"
+      subtitle="Shot positions sized by xG value, coloured by outcome"
+      actions={
+        <Toggle
+          options={[
             { key: 'both', label: 'Both' },
             { key: 'home', label: homeTeam?.split(' ').pop() },
             { key: 'away', label: awayTeam?.split(' ').pop() },
-          ].map(t => (
-            <button
-              key={t.key}
-              onClick={() => setActiveTeam(t.key)}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
-                activeTeam === t.key
-                  ? 'bg-cyan-500/20 text-cyan-400'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <Pitch height={360}>
-        {/* Only show right half for shots (attacking direction) */}
+          ]}
+          active={activeTeam}
+          onChange={setActiveTeam}
+        />
+      }
+    >
+      <Pitch height={380}>
         {filtered.map((s, i) => {
           const x = s.location?.[0]
           const y = s.location?.[1]
           if (!x || !y) return null
 
-          const xg = s.shot?.statsbomb_xg || 0.02
-          const r = Math.max(1, Math.sqrt(xg) * 4)
+          const xgVal = s.shot?.statsbomb_xg || 0.02
+          const r = Math.max(1.2, Math.sqrt(xgVal) * 4.5)
           const isGoal = s.shot?.outcome?.name === 'Goal'
-          const color = getColor(s.shot?.outcome?.name)
+          const { color, glow } = getOutcome(s.shot?.outcome?.name)
+          const isHovered = hoveredShot === s
 
           return (
             <g key={i}
@@ -73,60 +62,74 @@ export default function ShotMap({ shots, homeTeam, awayTeam }) {
               style={{ cursor: 'pointer' }}
             >
               {isGoal && (
-                <circle cx={x} cy={y} r={r + 1.5} fill="none" stroke={color} strokeWidth="0.4" opacity="0.5">
-                  <animate attributeName="r" from={r + 1} to={r + 3} dur="2s" repeatCount="indefinite" />
-                  <animate attributeName="opacity" from="0.5" to="0" dur="2s" repeatCount="indefinite" />
-                </circle>
+                <>
+                  <circle cx={x} cy={y} r={r + 2} fill="none" stroke={color} strokeWidth="0.3" opacity="0.3">
+                    <animate attributeName="r" from={r + 1.5} to={r + 4} dur="2.5s" repeatCount="indefinite" />
+                    <animate attributeName="opacity" from="0.3" to="0" dur="2.5s" repeatCount="indefinite" />
+                  </circle>
+                </>
               )}
               <circle
-                cx={x}
-                cy={y}
-                r={r}
+                cx={x} cy={y} r={isHovered ? r + 0.8 : r}
                 fill={color}
-                opacity={isGoal ? 0.9 : 0.7}
-                stroke={isGoal ? '#fff' : 'none'}
-                strokeWidth={isGoal ? 0.4 : 0}
+                opacity={isGoal ? 0.9 : 0.65}
+                stroke={isGoal ? 'rgba(255,255,255,0.6)' : isHovered ? 'rgba(255,255,255,0.3)' : 'none'}
+                strokeWidth={isGoal ? 0.5 : 0.3}
+                style={{ transition: 'r 0.2s ease, opacity 0.2s ease' }}
               />
             </g>
           )
         })}
       </Pitch>
 
+      {/* Hover tooltip */}
       {hoveredShot && (
-        <div className="mt-3 px-4 py-2 bg-slate-800 rounded-lg text-sm flex items-center gap-4">
-          <span className="text-white font-medium">{hoveredShot.player?.name}</span>
-          <span className="text-slate-400">{hoveredShot.minute}'</span>
-          <span className="font-mono text-cyan-400">xG {(hoveredShot.shot?.statsbomb_xg || 0).toFixed(2)}</span>
-          <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-            hoveredShot.shot?.outcome?.name === 'Goal' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-700 text-slate-300'
+        <div className="mt-4 flex items-center gap-4 px-5 py-3 glass rounded-xl text-[13px] animate-fade-in">
+          <span className="text-white font-semibold">{hoveredShot.player?.name}</span>
+          <span className="text-slate-500 font-mono text-[12px]">{hoveredShot.minute}'</span>
+          <span className="font-mono text-cyan-400 font-semibold">xG {(hoveredShot.shot?.statsbomb_xg || 0).toFixed(2)}</span>
+          <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${
+            hoveredShot.shot?.outcome?.name === 'Goal'
+              ? 'bg-emerald-400/10 text-emerald-400'
+              : 'bg-white/[0.04] text-slate-400'
           }`}>
             {hoveredShot.shot?.outcome?.name}
           </span>
-          <span className="text-slate-500 text-xs">{hoveredShot.shot?.body_part?.name} · {hoveredShot.shot?.technique?.name}</span>
+          <span className="text-slate-600 text-[11px]">{hoveredShot.shot?.body_part?.name}</span>
         </div>
       )}
 
-      <div className="mt-4 grid grid-cols-2 gap-4">
-        <div className="bg-slate-800/50 rounded-lg p-3 text-center">
-          <div className="text-xs text-slate-400 mb-1">{homeTeam}</div>
-          <div className="text-2xl font-bold font-mono text-cyan-400">{homeXG.toFixed(2)}</div>
-          <div className="text-xs text-slate-500">xG</div>
-        </div>
-        <div className="bg-slate-800/50 rounded-lg p-3 text-center">
-          <div className="text-xs text-slate-400 mb-1">{awayTeam}</div>
-          <div className="text-2xl font-bold font-mono text-cyan-400">{awayXG.toFixed(2)}</div>
-          <div className="text-xs text-slate-500">xG</div>
-        </div>
-      </div>
-
-      <div className="mt-3 flex flex-wrap gap-3 justify-center">
-        {Object.entries({ Goal: '#34d399', Saved: '#fbbf24', Blocked: '#fb923c', 'Off Target': '#fb7185', Post: '#a78bfa' }).map(([label, color]) => (
-          <div key={label} className="flex items-center gap-1.5 text-xs text-slate-400">
-            <span className="w-2.5 h-2.5 rounded-full" style={{ background: color }} />
-            {label}
+      {/* xG summary */}
+      <div className="mt-5 grid grid-cols-2 gap-4">
+        {[
+          { team: homeTeam, val: xg(homeTeam), color: 'cyan' },
+          { team: awayTeam, val: xg(awayTeam), color: 'rose' },
+        ].map(({ team, val, color }) => (
+          <div key={team} className="bg-white/[0.02] rounded-xl p-4 text-center border border-white/[0.03]">
+            <div className="text-[11px] text-slate-500 mb-1.5 tracking-wide">{team}</div>
+            <div className={`text-2xl font-bold font-mono ${color === 'cyan' ? 'text-cyan-300' : 'text-rose-300'}`}>
+              {val.toFixed(2)}
+            </div>
+            <div className="text-[10px] text-slate-600 mt-0.5 uppercase tracking-wider">xG</div>
           </div>
         ))}
       </div>
-    </div>
+
+      {/* Legend */}
+      <div className="mt-4 flex flex-wrap justify-center gap-4">
+        {[
+          { label: 'Goal', color: '#34d399' },
+          { label: 'Saved', color: '#fbbf24' },
+          { label: 'Blocked', color: '#fb923c' },
+          { label: 'Off Target', color: '#fb7185' },
+          { label: 'Post', color: '#a78bfa' },
+        ].map(l => (
+          <div key={l.label} className="flex items-center gap-1.5 text-[11px] text-slate-500">
+            <span className="w-2 h-2 rounded-full" style={{ background: l.color, opacity: 0.8 }} />
+            {l.label}
+          </div>
+        ))}
+      </div>
+    </Section>
   )
 }

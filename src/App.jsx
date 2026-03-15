@@ -19,6 +19,7 @@ export default function App() {
   const handleSelectMatch = useCallback(async (m, comp) => {
     setLoading(true)
     setError(null)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
     try {
       const [events, lineups] = await Promise.all([
         getEvents(m.match_id),
@@ -39,70 +40,87 @@ export default function App() {
     setMatch(null)
     setData(null)
     setCompetition(null)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   return (
-    <div className="min-h-screen bg-slate-950">
-      {/* Header */}
-      <header className="border-b border-slate-800/50 bg-slate-950/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-400 to-cyan-600 flex items-center justify-center">
-              <svg className="w-4 h-4 text-slate-950" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M10 2L2 10l8 8 8-8-8-8zm0 2.83L15.17 10 10 15.17 4.83 10 10 4.83z" />
-              </svg>
+    <div className="min-h-screen relative">
+      <div className="ambient-glow" />
+
+      {/* Sticky header */}
+      <header className="glass-strong sticky top-0 z-50 border-b border-white/[0.04]">
+        <div className="max-w-[1400px] mx-auto px-8 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3.5">
+            <div className="relative">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-400 via-cyan-500 to-violet-500 flex items-center justify-center shadow-lg shadow-cyan-500/20">
+                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5" />
+                </svg>
+              </div>
             </div>
             <div>
-              <h1 className="text-white font-bold text-lg tracking-tight">Match Intelligence</h1>
-              <p className="text-xs text-slate-500 -mt-0.5">Powered by StatsBomb Open Data</p>
+              <h1 className="text-white font-bold text-[15px] tracking-[-0.01em]">Match Intelligence</h1>
+              <p className="text-[11px] text-slate-500 font-medium tracking-wide">POWERED BY STATSBOMB</p>
             </div>
           </div>
           {match && (
             <button
               onClick={handleBack}
-              className="flex items-center gap-2 text-sm text-slate-400 hover:text-cyan-400 transition-colors"
+              className="group flex items-center gap-2 text-[13px] text-slate-400 hover:text-white transition-all duration-300 px-4 py-2 rounded-xl hover:bg-white/[0.04]"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              <svg className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
               </svg>
-              New match
+              New analysis
             </button>
           )}
         </div>
       </header>
 
-      <main className="pb-20">
-        {/* Loading state */}
+      <main className="relative z-10 pb-24">
+        {/* Loading */}
         {loading && (
-          <div className="flex flex-col items-center justify-center py-32">
-            <div className="relative">
-              <div className="w-12 h-12 border-2 border-cyan-400/30 rounded-full" />
-              <div className="absolute inset-0 w-12 h-12 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
+          <div className="flex flex-col items-center justify-center py-40 animate-fade-in">
+            <div className="relative w-16 h-16">
+              <div className="absolute inset-0 rounded-full border-2 border-cyan-400/10" />
+              <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-cyan-400 animate-spin" />
+              <div className="absolute inset-2 rounded-full border border-transparent border-t-violet-400/60 animate-spin" style={{ animationDuration: '1.5s', animationDirection: 'reverse' }} />
             </div>
-            <p className="text-slate-400 text-sm mt-4">Loading match data...</p>
-            <p className="text-slate-600 text-xs mt-1">Fetching events from StatsBomb</p>
+            <p className="text-white/80 text-sm font-medium mt-6 tracking-tight">Generating report</p>
+            <p className="text-slate-500 text-xs mt-1.5">Fetching event data from StatsBomb</p>
           </div>
         )}
 
-        {/* Error state */}
+        {/* Error */}
         {error && !loading && (
-          <div className="max-w-md mx-auto mt-20 p-6 bg-rose-500/10 border border-rose-500/30 rounded-xl text-center">
-            <p className="text-rose-400 mb-3">{error}</p>
-            <button onClick={handleBack} className="text-sm text-cyan-400 hover:underline">Go back</button>
+          <div className="max-w-md mx-auto mt-24 animate-fade-in-up">
+            <div className="glass rounded-2xl p-8 text-center">
+              <div className="w-12 h-12 rounded-full bg-rose-500/10 flex items-center justify-center mx-auto mb-4">
+                <svg className="w-5 h-5 text-rose-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                </svg>
+              </div>
+              <p className="text-rose-300 text-sm mb-4">{error}</p>
+              <button onClick={handleBack} className="text-sm text-cyan-400 hover:text-cyan-300 font-medium transition-colors">Go back</button>
+            </div>
           </div>
         )}
 
         {/* Match selector */}
         {!match && !loading && !error && (
-          <div className="pt-12">
-            <div className="text-center mb-12 px-6">
-              <h1 className="text-4xl sm:text-5xl font-extrabold text-white mb-4 tracking-tight">
-                Match Intelligence<br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-emerald-400">Report</span>
+          <div className="pt-20 pb-8">
+            <div className="text-center mb-16 px-6 animate-fade-in-up">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-500/[0.07] border border-cyan-500/[0.12] text-[11px] text-cyan-400 font-semibold tracking-wider uppercase mb-8">
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse-glow" />
+                Live data from StatsBomb Open Data
+              </div>
+              <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-[-0.03em] text-white mb-6 leading-[1.05]">
+                Match<br />
+                <span className="text-gradient">Intelligence</span>
               </h1>
-              <p className="text-slate-400 max-w-xl mx-auto">
-                Professional match analysis reports generated from StatsBomb event-level data.
-                Select a competition and match to generate a full tactical intelligence briefing.
+              <p className="text-slate-400 max-w-lg mx-auto text-base leading-relaxed">
+                Professional match analysis reports generated from event-level data.
+                Select a competition and match to build a full tactical briefing.
               </p>
             </div>
             <MatchSelector onSelectMatch={handleSelectMatch} />
@@ -111,52 +129,62 @@ export default function App() {
 
         {/* Match report */}
         {data && match && !loading && (
-          <div className="max-w-7xl mx-auto px-6 pt-8">
+          <div className="max-w-[1400px] mx-auto px-8 pt-10">
             <MatchHeader match={match} competition={competition} data={data} />
 
-            <div className="mt-8 space-y-8">
-              {/* Row 1: Stats + xG Timeline */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <MatchStatsPanel data={data} />
-                <XGTimeline shots={data.shots} homeTeam={data.teams.home} awayTeam={data.teams.away} />
+            <div className="mt-10 space-y-6">
+              {/* Stats + xG */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="animate-fade-in-up stagger-1">
+                  <MatchStatsPanel data={data} />
+                </div>
+                <div className="animate-fade-in-up stagger-2">
+                  <XGTimeline shots={data.shots} homeTeam={data.teams.home} awayTeam={data.teams.away} />
+                </div>
               </div>
 
-              {/* Row 2: Shot Map */}
-              <ShotMap shots={data.shots} homeTeam={data.teams.home} awayTeam={data.teams.away} />
+              {/* Shot Map */}
+              <div className="animate-fade-in-up stagger-3">
+                <ShotMap shots={data.shots} homeTeam={data.teams.home} awayTeam={data.teams.away} />
+              </div>
 
-              {/* Row 3: Passing Networks */}
-              <PassingNetwork
-                passes={data.passes}
-                homeTeam={data.teams.home}
-                awayTeam={data.teams.away}
-                startingXIs={data.startingXIs}
-              />
-
-              {/* Row 4: Progressive Actions + Pressing */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <ProgressiveActions
+              {/* Passing Network */}
+              <div className="animate-fade-in-up stagger-4">
+                <PassingNetwork
                   passes={data.passes}
-                  carries={data.carries}
                   homeTeam={data.teams.home}
                   awayTeam={data.teams.away}
+                  startingXIs={data.startingXIs}
                 />
-                <PressingMap
-                  pressures={data.pressures}
-                  defensiveActions={data.defensiveActions}
-                  homeTeam={data.teams.home}
-                  awayTeam={data.teams.away}
-                />
+              </div>
+
+              {/* Progressive + Pressing */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="animate-fade-in-up stagger-5">
+                  <ProgressiveActions
+                    passes={data.passes}
+                    carries={data.carries}
+                    homeTeam={data.teams.home}
+                    awayTeam={data.teams.away}
+                  />
+                </div>
+                <div className="animate-fade-in-up stagger-6">
+                  <PressingMap
+                    pressures={data.pressures}
+                    defensiveActions={data.defensiveActions}
+                    homeTeam={data.teams.home}
+                    awayTeam={data.teams.away}
+                  />
+                </div>
               </div>
             </div>
 
-            {/* Footer */}
-            <footer className="mt-16 pt-8 border-t border-slate-800/50 text-center pb-8">
-              <p className="text-xs text-slate-600">
-                Data provided by <a href="https://statsbomb.com/what-we-do/hub/free-data/" target="_blank" rel="noopener" className="text-slate-500 hover:text-cyan-400 transition-colors">StatsBomb Open Data</a>.
-                Built by <a href="https://www.linkedin.com/in/mjduplessis" target="_blank" rel="noopener" className="text-slate-500 hover:text-cyan-400 transition-colors">MJ du Plessis</a>.
-              </p>
-              <p className="text-xs text-slate-700 mt-1">
-                All analysis is automated from event-level data. No manual adjustments.
+            <footer className="mt-20 pt-10 border-t border-white/[0.04] text-center pb-10">
+              <p className="text-[11px] text-slate-600 tracking-wide">
+                Data by{' '}
+                <a href="https://statsbomb.com/what-we-do/hub/free-data/" target="_blank" rel="noopener" className="text-slate-500 hover:text-cyan-400 transition-colors duration-300">StatsBomb</a>
+                {' · '}Built by{' '}
+                <a href="https://www.linkedin.com/in/mjduplessis" target="_blank" rel="noopener" className="text-slate-500 hover:text-cyan-400 transition-colors duration-300">MJ du Plessis</a>
               </p>
             </footer>
           </div>

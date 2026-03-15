@@ -1,128 +1,90 @@
 import { useState } from 'react'
 import Pitch from '../pitch/Pitch'
+import Section from '../ui/Section'
+import Toggle from '../ui/Toggle'
 
 export default function PressingMap({ pressures, defensiveActions, homeTeam, awayTeam }) {
   const [activeTeam, setActiveTeam] = useState('home')
   const [layer, setLayer] = useState('pressure')
 
   const teamName = activeTeam === 'home' ? homeTeam : awayTeam
-
   const data = layer === 'pressure'
     ? pressures.filter(e => e.team?.name === teamName && e.location)
     : defensiveActions.filter(e => e.team?.name === teamName && e.location)
 
-  const zoneWidth = 20
-  const zoneHeight = 20
+  const zoneW = 20, zoneH = 20
   const zones = {}
-
   for (const e of data) {
-    const zx = Math.floor(e.location[0] / zoneWidth)
-    const zy = Math.floor(e.location[1] / zoneHeight)
-    const key = `${zx}-${zy}`
+    const key = `${Math.floor(e.location[0] / zoneW)}-${Math.floor(e.location[1] / zoneH)}`
     zones[key] = (zones[key] || 0) + 1
   }
-
   const maxCount = Math.max(...Object.values(zones), 1)
 
-  const highPressureActions = data.filter(e => e.location[0] >= 80).length
-  const midPressureActions = data.filter(e => e.location[0] >= 40 && e.location[0] < 80).length
-  const lowPressureActions = data.filter(e => e.location[0] < 40).length
+  const high = data.filter(e => e.location[0] >= 80).length
+  const mid = data.filter(e => e.location[0] >= 40 && e.location[0] < 80).length
+  const low = data.filter(e => e.location[0] < 40).length
+  const zoneColor = layer === 'pressure' ? '#fbbf24' : '#fb7185'
 
   return (
-    <div className="bg-slate-900 rounded-xl p-6 border border-slate-800">
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h3 className="text-lg font-semibold text-white">
-            {layer === 'pressure' ? 'Pressing Intensity' : 'Defensive Actions'}
-          </h3>
-          <p className="text-sm text-slate-400 mt-1">
-            {layer === 'pressure' ? 'Where the team applies pressure on the ball' : 'Tackles, interceptions, blocks & recoveries'}
-          </p>
-        </div>
+    <Section
+      title={layer === 'pressure' ? 'Pressing Zones' : 'Defensive Actions'}
+      subtitle={layer === 'pressure' ? 'Where the team applies pressure' : 'Tackles, interceptions, blocks & recoveries'}
+      actions={
         <div className="flex gap-2">
-          <div className="flex gap-1 bg-slate-800 rounded-lg p-1">
-            {[
+          <Toggle
+            options={[
               { key: 'pressure', label: 'Pressing' },
               { key: 'defensive', label: 'Defensive' },
-            ].map(t => (
-              <button
-                key={t.key}
-                onClick={() => setLayer(t.key)}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
-                  layer === t.key
-                    ? 'bg-amber-500/20 text-amber-400'
-                    : 'text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
-          <div className="flex gap-1 bg-slate-800 rounded-lg p-1">
-            {[
+            ]}
+            active={layer}
+            onChange={setLayer}
+            color={layer === 'pressure' ? 'amber' : 'rose'}
+          />
+          <Toggle
+            options={[
               { key: 'home', label: homeTeam?.split(' ').pop() },
               { key: 'away', label: awayTeam?.split(' ').pop() },
-            ].map(t => (
-              <button
-                key={t.key}
-                onClick={() => setActiveTeam(t.key)}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
-                  activeTeam === t.key
-                    ? 'bg-cyan-500/20 text-cyan-400'
-                    : 'text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
+            ]}
+            active={activeTeam}
+            onChange={setActiveTeam}
+          />
         </div>
-      </div>
-
-      <Pitch height={360}>
+      }
+    >
+      <Pitch height={380}>
         {Object.entries(zones).map(([key, count]) => {
           const [zx, zy] = key.split('-').map(Number)
           const intensity = count / maxCount
           return (
-            <rect
-              key={key}
-              x={zx * zoneWidth}
-              y={zy * zoneHeight}
-              width={zoneWidth}
-              height={zoneHeight}
-              fill={layer === 'pressure' ? '#fbbf24' : '#f43f5e'}
-              opacity={0.1 + intensity * 0.6}
-              rx="1"
+            <rect key={key}
+              x={zx * zoneW + 0.5} y={zy * zoneH + 0.5}
+              width={zoneW - 1} height={zoneH - 1}
+              fill={zoneColor}
+              opacity={0.06 + intensity * 0.5}
+              rx="1.5"
             />
           )
         })}
-
         {data.map((e, i) => (
-          <circle
-            key={i}
-            cx={e.location[0]}
-            cy={e.location[1]}
-            r="0.8"
-            fill={layer === 'pressure' ? '#fbbf24' : '#f43f5e'}
-            opacity="0.5"
+          <circle key={i}
+            cx={e.location[0]} cy={e.location[1]}
+            r="0.7" fill={zoneColor} opacity="0.45"
           />
         ))}
       </Pitch>
 
-      <div className="mt-4 grid grid-cols-3 gap-3">
-        <div className="bg-slate-800/50 rounded-lg p-3 text-center">
-          <div className="text-xl font-bold font-mono text-rose-400">{highPressureActions}</div>
-          <div className="text-xs text-slate-400">High (final 3rd)</div>
-        </div>
-        <div className="bg-slate-800/50 rounded-lg p-3 text-center">
-          <div className="text-xl font-bold font-mono text-amber-400">{midPressureActions}</div>
-          <div className="text-xs text-slate-400">Mid (middle 3rd)</div>
-        </div>
-        <div className="bg-slate-800/50 rounded-lg p-3 text-center">
-          <div className="text-xl font-bold font-mono text-cyan-400">{lowPressureActions}</div>
-          <div className="text-xs text-slate-400">Low (own 3rd)</div>
-        </div>
+      <div className="mt-5 grid grid-cols-3 gap-3">
+        {[
+          { label: 'Final third', value: high, color: '#fb7185' },
+          { label: 'Middle third', value: mid, color: '#fbbf24' },
+          { label: 'Own third', value: low, color: '#22d3ee' },
+        ].map(s => (
+          <div key={s.label} className="bg-white/[0.02] rounded-xl p-3.5 text-center border border-white/[0.03]">
+            <div className="text-lg font-bold font-mono" style={{ color: s.color }}>{s.value}</div>
+            <div className="text-[10px] text-slate-500 mt-0.5 uppercase tracking-wider">{s.label}</div>
+          </div>
+        ))}
       </div>
-    </div>
+    </Section>
   )
 }

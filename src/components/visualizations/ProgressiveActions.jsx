@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import Pitch from '../pitch/Pitch'
+import Section from '../ui/Section'
+import Toggle from '../ui/Toggle'
 
-function isProgressive(startX, startY, endX, endY) {
-  const startDist = Math.sqrt((120 - startX) ** 2 + (40 - startY) ** 2)
-  const endDist = Math.sqrt((120 - endX) ** 2 + (40 - endY) ** 2)
-  return (startDist - endDist) >= 10
+function isProgressive(sx, sy, ex, ey) {
+  const startD = Math.sqrt((120 - sx) ** 2 + (40 - sy) ** 2)
+  const endD = Math.sqrt((120 - ex) ** 2 + (40 - ey) ** 2)
+  return (startD - endD) >= 10
 }
 
 export default function ProgressiveActions({ passes, carries, homeTeam, awayTeam }) {
@@ -14,8 +16,7 @@ export default function ProgressiveActions({ passes, carries, homeTeam, awayTeam
   const teamName = activeTeam === 'home' ? homeTeam : awayTeam
 
   const progressivePasses = passes.filter(p => {
-    if (p.team?.name !== teamName) return false
-    if (p.pass?.outcome !== undefined) return false
+    if (p.team?.name !== teamName || p.pass?.outcome !== undefined) return false
     if (!p.location || !p.pass?.end_location) return false
     return isProgressive(p.location[0], p.location[1], p.pass.end_location[0], p.pass.end_location[1])
   })
@@ -33,115 +34,93 @@ export default function ProgressiveActions({ passes, carries, homeTeam, awayTeam
     const name = a.player?.name || 'Unknown'
     topPlayers[name] = (topPlayers[name] || 0) + 1
   }
-  const sortedPlayers = Object.entries(topPlayers).sort((a, b) => b[1] - a[1]).slice(0, 5)
+  const sorted = Object.entries(topPlayers).sort((a, b) => b[1] - a[1]).slice(0, 5)
+  const maxPlayerCount = sorted[0]?.[1] || 1
 
   return (
-    <div className="bg-slate-900 rounded-xl p-6 border border-slate-800">
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h3 className="text-lg font-semibold text-white">Progressive Actions</h3>
-          <p className="text-sm text-slate-400 mt-1">Passes and carries that move the ball ≥10m toward goal</p>
-        </div>
+    <Section
+      title="Progressive Actions"
+      subtitle="Passes and carries moving the ball ≥10m toward goal"
+      actions={
         <div className="flex gap-2">
-          <div className="flex gap-1 bg-slate-800 rounded-lg p-1">
-            {[
+          <Toggle
+            options={[
               { key: 'passes', label: 'Passes' },
               { key: 'carries', label: 'Carries' },
-            ].map(t => (
-              <button
-                key={t.key}
-                onClick={() => setActionType(t.key)}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
-                  actionType === t.key
-                    ? 'bg-emerald-500/20 text-emerald-400'
-                    : 'text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
-          <div className="flex gap-1 bg-slate-800 rounded-lg p-1">
-            {[
+            ]}
+            active={actionType}
+            onChange={setActionType}
+            color="emerald"
+          />
+          <Toggle
+            options={[
               { key: 'home', label: homeTeam?.split(' ').pop() },
               { key: 'away', label: awayTeam?.split(' ').pop() },
-            ].map(t => (
-              <button
-                key={t.key}
-                onClick={() => setActiveTeam(t.key)}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
-                  activeTeam === t.key
-                    ? 'bg-cyan-500/20 text-cyan-400'
-                    : 'text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
+            ]}
+            active={activeTeam}
+            onChange={setActiveTeam}
+          />
         </div>
-      </div>
-
-      <Pitch height={360}>
+      }
+    >
+      <Pitch height={380}>
         {actions.map((a, i) => {
           const start = a.location
           const end = actionType === 'passes' ? a.pass?.end_location : a.carry?.end_location
           if (!start || !end) return null
-
-          const inFinalThird = end[0] >= 80
+          const inFinal = end[0] >= 80
           const color = actionType === 'passes'
-            ? (inFinalThird ? '#34d399' : '#22d3ee')
-            : (inFinalThird ? '#fbbf24' : '#fb923c')
+            ? (inFinal ? '#34d399' : 'rgba(34,211,238,0.6)')
+            : (inFinal ? '#fbbf24' : 'rgba(251,146,60,0.6)')
 
           return (
             <g key={i}>
               <line
-                x1={start[0]} y1={start[1]}
-                x2={end[0]} y2={end[1]}
-                stroke={color}
-                strokeWidth="0.4"
-                opacity="0.5"
+                x1={start[0]} y1={start[1]} x2={end[0]} y2={end[1]}
+                stroke={color} strokeWidth="0.35" opacity="0.45" strokeLinecap="round"
               />
-              <circle cx={end[0]} cy={end[1]} r="0.6" fill={color} opacity="0.7" />
+              <circle cx={end[0]} cy={end[1]} r="0.55" fill={color} opacity="0.7" />
             </g>
           )
         })}
       </Pitch>
 
-      <div className="mt-4 grid grid-cols-2 gap-4">
-        <div className="bg-slate-800/50 rounded-lg p-3 text-center">
-          <div className="text-2xl font-bold font-mono text-emerald-400">{progressivePasses.length}</div>
-          <div className="text-xs text-slate-400">Progressive passes</div>
+      {/* Counts */}
+      <div className="mt-5 grid grid-cols-2 gap-3">
+        <div className="bg-white/[0.02] rounded-xl p-3.5 text-center border border-white/[0.03]">
+          <div className="text-lg font-bold font-mono text-emerald-400">{progressivePasses.length}</div>
+          <div className="text-[10px] text-slate-500 mt-0.5 uppercase tracking-wider">Prog. passes</div>
         </div>
-        <div className="bg-slate-800/50 rounded-lg p-3 text-center">
-          <div className="text-2xl font-bold font-mono text-amber-400">{progressiveCarries.length}</div>
-          <div className="text-xs text-slate-400">Progressive carries</div>
+        <div className="bg-white/[0.02] rounded-xl p-3.5 text-center border border-white/[0.03]">
+          <div className="text-lg font-bold font-mono text-amber-400">{progressiveCarries.length}</div>
+          <div className="text-[10px] text-slate-500 mt-0.5 uppercase tracking-wider">Prog. carries</div>
         </div>
       </div>
 
-      {sortedPlayers.length > 0 && (
-        <div className="mt-4">
-          <h4 className="text-xs text-slate-400 uppercase tracking-wider mb-2">Top contributors</h4>
-          <div className="space-y-1.5">
-            {sortedPlayers.map(([name, count], i) => {
-              const max = sortedPlayers[0][1]
-              return (
-                <div key={name} className="flex items-center gap-3">
-                  <span className="text-xs text-slate-500 w-4 text-right">{i + 1}</span>
-                  <span className="text-sm text-slate-200 w-40 truncate">{name.split(' ').slice(-2).join(' ')}</span>
-                  <div className="flex-1 bg-slate-800 rounded-full h-1.5 overflow-hidden">
-                    <div
-                      className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-emerald-500"
-                      style={{ width: `${(count / max) * 100}%` }}
-                    />
-                  </div>
-                  <span className="text-xs font-mono text-cyan-400 w-6 text-right">{count}</span>
+      {/* Top contributors */}
+      {sorted.length > 0 && (
+        <div className="mt-5">
+          <h4 className="text-[10px] text-slate-500 uppercase tracking-[0.15em] font-semibold mb-3">Top Contributors</h4>
+          <div className="space-y-2">
+            {sorted.map(([name, count], i) => (
+              <div key={name} className="flex items-center gap-3">
+                <span className="text-[11px] text-slate-600 w-4 text-right font-mono">{i + 1}</span>
+                <span className="text-[13px] text-slate-300 w-36 truncate font-medium">{name.split(' ').slice(-2).join(' ')}</span>
+                <div className="flex-1 h-1.5 bg-white/[0.03] rounded-full overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all duration-700"
+                    style={{
+                      width: `${(count / maxPlayerCount) * 100}%`,
+                      background: 'linear-gradient(90deg, rgba(34,211,238,0.5), rgba(52,211,153,0.7))'
+                    }}
+                  />
                 </div>
-              )
-            })}
+                <span className="text-[12px] font-mono text-cyan-400 w-6 text-right font-semibold">{count}</span>
+              </div>
+            ))}
           </div>
         </div>
       )}
-    </div>
+    </Section>
   )
 }
