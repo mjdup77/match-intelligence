@@ -9,6 +9,7 @@ const FEATURED = [
   { competitionId: 72, seasonId: 107, label: "FA Women's Super League 23/24", emoji: '⚽' },
   { competitionId: 11, seasonId: 90, label: 'La Liga 2019/20', emoji: '🇪🇸' },
   { competitionId: 2, seasonId: 44, label: 'Premier League 2003/04', emoji: '🏴󠁧󠁢󠁥󠁮󠁧󠁿' },
+  { competitionId: 11, seasonId: 42, label: 'La Liga 2018/19', emoji: '🇪🇸' },
 ]
 
 export default function MatchSelector({ onSelectMatch }) {
@@ -89,15 +90,15 @@ export default function MatchSelector({ onSelectMatch }) {
           ) : (
             <div>
               <h3 className="text-[11px] uppercase tracking-[0.15em] text-slate-500 font-semibold mb-4 px-1">All Competitions</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1.5">
                 {competitions.map(c => (
                   <button
                     key={`${c.competition_id}-${c.season_id}`}
                     onClick={() => handleCompSelect(c.competition_id, c.season_id, `${c.competition_name} ${c.season_name}`)}
-                    className="group rounded-xl px-4 py-3 text-left transition-all duration-300 hover:bg-white/[0.03] border border-transparent hover:border-white/[0.06]"
+                    className="group glass-subtle rounded-xl px-4 py-3.5 text-left transition-all duration-300 hover:bg-white/[0.04] hover:border-white/[0.08]"
                   >
-                    <div className="text-slate-200 font-medium text-[13px] group-hover:text-white transition-colors">{c.competition_name}</div>
-                    <div className="text-slate-500 text-[11px] mt-0.5">{c.season_name} · {c.country_name}</div>
+                    <div className="text-slate-200 font-medium text-[13px] group-hover:text-white transition-colors leading-snug">{c.competition_name}</div>
+                    <div className="text-slate-500 text-[11px] mt-1">{c.season_name} · {c.country_name}</div>
                   </button>
                 ))}
               </div>

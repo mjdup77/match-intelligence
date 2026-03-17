@@ -38,7 +38,7 @@ export default function MatchHeader({ match, competition, data }) {
       </div>
 
       {/* Match info */}
-      <div className="flex items-center justify-center gap-3 text-[12px] text-slate-500">
+      <div className="flex items-center justify-center flex-wrap gap-x-3 gap-y-1 text-[12px] text-slate-500">
         {match.match_date && (
           <span>{new Date(match.match_date).toLocaleDateString('en-GB', {
             weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
@@ -46,13 +46,13 @@ export default function MatchHeader({ match, competition, data }) {
         )}
         {match.stadium?.name && (
           <>
-            <span className="w-1 h-1 rounded-full bg-slate-700" />
+            <span className="w-1 h-1 rounded-full bg-slate-700 shrink-0" />
             <span>{match.stadium.name}</span>
           </>
         )}
         {match.referee?.name && (
           <>
-            <span className="w-1 h-1 rounded-full bg-slate-700" />
+            <span className="w-1 h-1 rounded-full bg-slate-700 shrink-0" />
             <span>{match.referee.name}</span>
           </>
         )}

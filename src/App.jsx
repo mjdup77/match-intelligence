@@ -109,16 +109,16 @@ export default function App() {
         {/* Match selector */}
         {!match && !loading && !error && (
           <div className="pt-20 pb-8">
-            <div className="text-center mb-16 px-6 animate-fade-in-up">
+            <div className="flex flex-col items-center mb-16 px-6 animate-fade-in-up">
               <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-500/[0.07] border border-cyan-500/[0.12] text-[11px] text-cyan-400 font-semibold tracking-wider uppercase mb-8">
                 <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse-glow" />
                 Live data from StatsBomb Open Data
               </div>
-              <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-[-0.03em] text-white mb-6 leading-[1.05]">
+              <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-[-0.03em] text-white mb-6 leading-[1.05] text-center">
                 Match<br />
                 <span className="text-gradient">Intelligence</span>
               </h1>
-              <p className="text-slate-400 max-w-lg mx-auto text-base leading-relaxed">
+              <p className="text-slate-400 max-w-lg text-center text-base leading-relaxed">
                 Professional match analysis reports generated from event-level data.
                 Select a competition and match to build a full tactical briefing.
               </p>
